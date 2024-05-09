@@ -1,0 +1,543 @@
+Wine Quality Prediction
+Loading the required libraries
+
+#Libraries for data manipulation and array operations.
+import pandas as pd
+import numpy as np
+
+#Data visualisation
+import matplotlib.pyplot as plt
+import seaborn as sns
+
+%matplotlib inline
+
+import warnings
+warnings.filterwarnings("ignore")
+
+     
+Loading the Wine dataset
+
+wine = pd.read_csv('WineQT.csv')
+wine.head()
+     
+fixed acidity	volatile acidity	citric acid	residual sugar	chlorides	free sulfur dioxide	total sulfur dioxide	density	pH	sulphates	alcohol	quality	Id
+0	7.4	0.70	0.00	1.9	0.076	11.0	34.0	0.9978	3.51	0.56	9.4	5	0
+1	7.8	0.88	0.00	2.6	0.098	25.0	67.0	0.9968	3.20	0.68	9.8	5	1
+2	7.8	0.76	0.04	2.3	0.092	15.0	54.0	0.9970	3.26	0.65	9.8	5	2
+3	11.2	0.28	0.56	1.9	0.075	17.0	60.0	0.9980	3.16	0.58	9.8	6	3
+4	7.4	0.70	0.00	1.9	0.076	11.0	34.0	0.9978	3.51	0.56	9.4	5	4
+
+wine.tail()
+     
+fixed acidity	volatile acidity	citric acid	residual sugar	chlorides	free sulfur dioxide	total sulfur dioxide	density	pH	sulphates	alcohol	quality	Id
+1138	6.3	0.510	0.13	2.3	0.076	29.0	40.0	0.99574	3.42	0.75	11.0	6	1592
+1139	6.8	0.620	0.08	1.9	0.068	28.0	38.0	0.99651	3.42	0.82	9.5	6	1593
+1140	6.2	0.600	0.08	2.0	0.090	32.0	44.0	0.99490	3.45	0.58	10.5	5	1594
+1141	5.9	0.550	0.10	2.2	0.062	39.0	51.0	0.99512	3.52	0.76	11.2	6	1595
+1142	5.9	0.645	0.12	2.0	0.075	32.0	44.0	0.99547	3.57	0.71	10.2	5	1597
+Data Inspection
+
+wine.shape
+     
+(1143, 13)
+That is, the data contains 1143 rows and 13 columns.
+
+
+wine.info()
+     
+<class 'pandas.core.frame.DataFrame'>
+RangeIndex: 1143 entries, 0 to 1142
+Data columns (total 13 columns):
+ #   Column                Non-Null Count  Dtype  
+---  ------                --------------  -----  
+ 0   fixed acidity         1143 non-null   float64
+ 1   volatile acidity      1143 non-null   float64
+ 2   citric acid           1143 non-null   float64
+ 3   residual sugar        1143 non-null   float64
+ 4   chlorides             1143 non-null   float64
+ 5   free sulfur dioxide   1143 non-null   float64
+ 6   total sulfur dioxide  1143 non-null   float64
+ 7   density               1143 non-null   float64
+ 8   pH                    1143 non-null   float64
+ 9   sulphates             1143 non-null   float64
+ 10  alcohol               1143 non-null   float64
+ 11  quality               1143 non-null   int64  
+ 12  Id                    1143 non-null   int64  
+dtypes: float64(11), int64(2)
+memory usage: 116.2 KB
+Here the datatype of first 11 columns are float and remaining 2 are integer type.
+
+
+#Statistical Analysis
+wine.describe().transpose()
+     
+count	mean	std	min	25%	50%	75%	max
+fixed acidity	1143.0	8.311111	1.747595	4.60000	7.10000	7.90000	9.100000	15.90000
+volatile acidity	1143.0	0.531339	0.179633	0.12000	0.39250	0.52000	0.640000	1.58000
+citric acid	1143.0	0.268364	0.196686	0.00000	0.09000	0.25000	0.420000	1.00000
+residual sugar	1143.0	2.532152	1.355917	0.90000	1.90000	2.20000	2.600000	15.50000
+chlorides	1143.0	0.086933	0.047267	0.01200	0.07000	0.07900	0.090000	0.61100
+free sulfur dioxide	1143.0	15.615486	10.250486	1.00000	7.00000	13.00000	21.000000	68.00000
+total sulfur dioxide	1143.0	45.914698	32.782130	6.00000	21.00000	37.00000	61.000000	289.00000
+density	1143.0	0.996730	0.001925	0.99007	0.99557	0.99668	0.997845	1.00369
+pH	1143.0	3.311015	0.156664	2.74000	3.20500	3.31000	3.400000	4.01000
+sulphates	1143.0	0.657708	0.170399	0.33000	0.55000	0.62000	0.730000	2.00000
+alcohol	1143.0	10.442111	1.082196	8.40000	9.50000	10.20000	11.100000	14.90000
+quality	1143.0	5.657043	0.805824	3.00000	5.00000	6.00000	6.000000	8.00000
+Id	1143.0	804.969379	463.997116	0.00000	411.00000	794.00000	1209.500000	1597.00000
+Cleaning
+
+#Check for missing values
+wine.isna().sum()
+     
+fixed acidity           0
+volatile acidity        0
+citric acid             0
+residual sugar          0
+chlorides               0
+free sulfur dioxide     0
+total sulfur dioxide    0
+density                 0
+pH                      0
+sulphates               0
+alcohol                 0
+quality                 0
+Id                      0
+dtype: int64
+No null values are present.
+
+
+#Droping the unneccessary column
+
+print(wine['Id'].nunique())
+wine = wine.drop('Id',axis=1)
+wine.head(4)
+     
+1143
+fixed acidity	volatile acidity	citric acid	residual sugar	chlorides	free sulfur dioxide	total sulfur dioxide	density	pH	sulphates	alcohol	quality
+0	7.4	0.70	0.00	1.9	0.076	11.0	34.0	0.9978	3.51	0.56	9.4	5
+1	7.8	0.88	0.00	2.6	0.098	25.0	67.0	0.9968	3.20	0.68	9.8	5
+2	7.8	0.76	0.04	2.3	0.092	15.0	54.0	0.9970	3.26	0.65	9.8	5
+3	11.2	0.28	0.56	1.9	0.075	17.0	60.0	0.9980	3.16	0.58	9.8	6
+
+#Check for dupliicates
+duplicated_val = wine[wine.duplicated()]
+print(duplicated_val)
+print(wine.duplicated().sum())
+     
+      fixed acidity  volatile acidity  citric acid  residual sugar  chlorides  \
+4               7.4             0.700         0.00            1.90      0.076   
+46              7.2             0.725         0.05            4.65      0.086   
+64              8.6             0.490         0.28            1.90      0.110   
+65              7.7             0.490         0.26            1.90      0.062   
+71              8.1             0.545         0.18            1.90      0.080   
+...             ...               ...          ...             ...        ...   
+1076            7.5             0.380         0.57            2.30      0.106   
+1113            7.8             0.600         0.26            2.00      0.080   
+1114            7.8             0.600         0.26            2.00      0.080   
+1116            7.2             0.695         0.13            2.00      0.076   
+1119            7.2             0.695         0.13            2.00      0.076   
+
+      free sulfur dioxide  total sulfur dioxide  density    pH  sulphates  \
+4                    11.0                  34.0  0.99780  3.51       0.56   
+46                    4.0                  11.0  0.99620  3.41       0.39   
+64                   20.0                 136.0  0.99720  2.93       1.95   
+65                    9.0                  31.0  0.99660  3.39       0.64   
+71                   13.0                  35.0  0.99720  3.30       0.59   
+...                   ...                   ...      ...   ...        ...   
+1076                  5.0                  12.0  0.99605  3.36       0.55   
+1113                 31.0                 131.0  0.99622  3.21       0.52   
+1114                 31.0                 131.0  0.99622  3.21       0.52   
+1116                 12.0                  20.0  0.99546  3.29       0.54   
+1119                 12.0                  20.0  0.99546  3.29       0.54   
+
+      alcohol  quality  
+4         9.4        5  
+46       10.9        5  
+64        9.9        6  
+65        9.6        5  
+71        9.0        6  
+...       ...      ...  
+1076     11.4        6  
+1113      9.9        5  
+1114      9.9        5  
+1116     10.1        5  
+1119     10.1        5  
+
+[125 rows x 12 columns]
+125
+
+#Excluding the duplicated values
+wine = wine.drop_duplicates()
+wine.shape
+     
+(1018, 12)
+
+#Check for outliers
+fig,axs = plt.subplots(4,3,figsize=(10,15))
+plot1 = sns.boxplot(wine['fixed acidity'],ax = axs[0,0])
+plot2 = sns.boxplot(wine['volatile acidity'],ax = axs[0,1])
+plot3 = sns.boxplot(wine['citric acid'],ax = axs[0,2])
+plot4 = sns.boxplot(wine['residual sugar'],ax = axs[1,0])
+plot5 = sns.boxplot(wine['chlorides'],ax = axs[1,1])
+plot6 = sns.boxplot(wine['free sulfur dioxide'],ax = axs[1,2])
+plot7 = sns.boxplot(wine['total sulfur dioxide'],ax = axs[2,0])
+plot8 = sns.boxplot(wine['density'],ax = axs[2,1])
+plot9 = sns.boxplot(wine['pH'],ax = axs[2,2])
+plot10 = sns.boxplot(wine['sulphates'],ax = axs[3,0])
+plot11 = sns.boxplot(wine['alcohol'],ax = axs[3,1])
+plot12 = sns.boxplot(wine['quality'],ax = axs[3,2])
+
+plt.tight_layout()
+
+     
+
+Excepting the columns 'citric acid','alcohol' and 'quality' ,all the other columns contain outliers.
+
+
+#Treating the outliers
+from scipy.stats import zscore
+
+z_scr = (zscore(wine[['fixed acidity', 'volatile acidity', 'residual sugar',
+       'chlorides', 'free sulfur dioxide', 'total sulfur dioxide', 'density',
+       'pH', 'sulphates']]))
+
+threshold = 3
+outlier_mask = (abs(z_scr>threshold)).any(axis=1)
+new_data = wine[~outlier_mask]
+print(outlier_mask.sum())
+new_data.shape
+     
+79
+(939, 12)
+
+new_data.shape
+     
+(939, 12)
+Now we can see that the outliers have been removed.
+
+Exploratory Data Analysis
+Univariate Analysis
+
+
+#Analysing our target variable
+sns.histplot(new_data['quality'],kde=True)
+plt.title('Distribution of Quality')
+plt.xlabel('Quality')
+plt.ylabel('Frequency')
+plt.show()
+
+     
+
+The above plot shows that there are 6 different level of quality from 3 to 8. And most of the observations come under the classes 5 and 6.
+
+
+wine_columns = new_data.columns
+for i in wine_columns:
+  plt.figure(figsize=(4,3))
+  sns.violinplot(x = i,data=new_data,color='y')
+  plt.xlabel(i)
+  plt.show()
+     
+
+
+
+
+
+
+
+
+
+
+
+
+Bivariate Analysis
+
+
+sns.scatterplot(x='density',y='fixed acidity',data=new_data)
+plt.xlabel('Density')
+plt.ylabel('Fixed acidity')
+plt.show()
+     
+
+This scatterplot shows that density and fixed acidity are positively correlated.
+
+
+sns.scatterplot(x='density',y='volatile acidity',data=new_data)
+plt.xlabel('Density')
+plt.ylabel('Volatile acidity')
+plt.show()
+     
+
+
+sns.scatterplot(x='fixed acidity',y='volatile acidity',data=new_data)
+plt.xlabel('Fixed acidity')
+plt.ylabel('Volatile acidity')
+plt.show()
+     
+
+fixed acidity and volatile acidity are almost negatively correlated
+
+
+sns.scatterplot(x='pH',y='fixed acidity',data=new_data)
+plt.xlabel('pH')
+plt.ylabel('Fixed acidity')
+plt.show()
+     
+
+pH and fixed acidity have a strong negative correlation.
+
+
+sns.scatterplot(x='pH',y='volatile acidity',data=new_data)
+plt.xlabel('pH')
+plt.ylabel('Volatile acidity')
+plt.show()
+     
+
+
+sns.scatterplot(x='citric acid',y='fixed acidity',data=new_data)
+plt.xlabel('Citric acid')
+plt.ylabel('Fixed acidity')
+plt.show()
+     
+
+fixed acidity and citric acid have a positive correlation between them.
+
+Analysing the features like density and acidity as predictors for wine quality..
+
+
+sns.scatterplot(x='density',y='fixed acidity',hue='quality',data=new_data)
+plt.xlabel('Density')
+plt.ylabel('Fixed acidity')
+plt.title('Scatterplot of Density vs. Fixed acidity by Wine Quality')
+plt.legend(title='Wine Quality')
+plt.show()
+     
+
+
+sns.scatterplot(x='density',y='volatile acidity',hue='quality',data=new_data)
+plt.xlabel('Density')
+plt.ylabel('Volatile acidity')
+plt.title('Scatterplot of Density vs. Volatile acidity by Wine Quality')
+plt.legend(title='Wine Quality')
+plt.show()
+     
+
+Quality is high when volatile acidity is low.
+
+
+sns.pairplot(new_data,hue='quality',palette='viridis')
+plt.show()
+     
+
+Multivariate Analysis
+
+
+from operator import ne
+plt.figure(figsize=(10,8))
+sns.heatmap(new_data.corr(),annot=True,cmap='viridis')
+plt.show()
+     
+
+It is clear that there are strong positive correlations between fixed acidity and citric acid ,and strong negative correlation between fixed acidity and pH.
+
+Creating the Feature and Target variables
+
+X = new_data.drop('quality',axis=1)#Feature
+y = new_data['quality']#Target
+
+y = np.array(y)
+y = y.reshape(-1,1)
+
+print(X.shape)
+print(y.shape)
+     
+(939, 11)
+(939, 1)
+Creating the training and testing dataset
+
+from sklearn.model_selection import train_test_split
+
+X_train,X_test,y_train,y_test = train_test_split(X,y,test_size=0.25,random_state=42,shuffle=True)
+     
+Scaling
+
+
+#Scaling
+
+from sklearn.preprocessing import StandardScaler
+
+scaler = StandardScaler()
+X_train_scaled = scaler.fit_transform(X_train)
+X_test_scaled = scaler.fit_transform(X_test)
+     
+Building the models
+1.Random Forest Classifier
+
+
+from sklearn.ensemble import RandomForestClassifier
+
+#creating model instance
+model1 = RandomForestClassifier()
+
+#Hyperparameter tuning
+from sklearn.model_selection import GridSearchCV
+
+#Define hyperparameter grid to search through
+param_grid1 = {'n_estimators':[50,100,200],
+              'max_depth':[None,10,20],
+              'min_samples_split':[2,5,10],
+              'min_samples_leaf':[1,2,4],
+              'criterion':['gini','entropy']}
+
+#Grid search with 5-fold cross validation
+grid1 = GridSearchCV(model1,param_grid=param_grid1,cv=5,scoring='accuracy',n_jobs=-1)
+grid1.fit(X_train_scaled,y_train)
+
+#Best parameters
+print('Best Parameters:',grid1.best_params_)
+
+#get the best model
+best_rf_model = grid1.best_estimator_
+
+#Prediction
+rf_pred = best_rf_model.predict(X_test_scaled)
+rf_pred
+     
+Best Parameters: {'criterion': 'entropy', 'max_depth': None, 'min_samples_leaf': 1, 'min_samples_split': 10, 'n_estimators': 100}
+array([6, 5, 5, 6, 6, 6, 6, 6, 5, 6, 6, 5, 7, 6, 6, 6, 5, 5, 5, 5, 7, 6,
+       5, 6, 6, 5, 5, 6, 5, 6, 6, 6, 6, 5, 6, 5, 6, 6, 5, 6, 5, 6, 5, 6,
+       6, 5, 6, 6, 6, 5, 6, 7, 6, 5, 5, 6, 6, 5, 6, 5, 5, 6, 7, 6, 6, 5,
+       5, 5, 5, 6, 5, 6, 6, 6, 6, 6, 5, 5, 6, 6, 6, 6, 6, 6, 6, 7, 5, 6,
+       6, 6, 5, 6, 5, 7, 6, 5, 6, 5, 6, 5, 6, 6, 5, 6, 5, 5, 6, 5, 5, 6,
+       5, 5, 5, 7, 6, 5, 5, 6, 5, 6, 6, 6, 6, 5, 5, 6, 6, 7, 5, 6, 5, 5,
+       6, 6, 5, 6, 6, 6, 6, 6, 5, 5, 6, 6, 6, 5, 6, 7, 5, 5, 5, 5, 6, 6,
+       5, 6, 6, 6, 5, 6, 5, 6, 5, 7, 6, 6, 5, 6, 6, 6, 7, 5, 7, 5, 6, 6,
+       6, 5, 5, 5, 5, 6, 5, 5, 6, 6, 5, 5, 5, 5, 5, 5, 5, 5, 6, 5, 5, 5,
+       6, 5, 6, 5, 6, 6, 7, 6, 6, 6, 5, 5, 6, 5, 6, 5, 7, 6, 6, 5, 5, 5,
+       6, 5, 5, 5, 5, 6, 7, 6, 5, 5, 5, 5, 6, 6, 6])
+Model Evaluation
+
+
+from sklearn.metrics import accuracy_score,confusion_matrix,ConfusionMatrixDisplay
+rf_score = accuracy_score(y_test,rf_pred)
+rf_matrix = confusion_matrix(y_test,rf_pred)
+
+print('Random Forest Classifier Accuracy: ',rf_score)
+
+class_labels = wine['quality'].unique()
+disp1 = ConfusionMatrixDisplay(confusion_matrix=rf_matrix,display_labels=class_labels)
+disp1.plot(cmap='Blues',values_format='d')
+plt.title('Confusion Matrix')
+plt.show()
+     
+Random Forest Classifier Accuracy:  0.5872340425531914
+
+An accuracy of 0.5872(58.72%) for a Random Forest Classifier implies that the model correctly predicted the target variable(wine quality) for approximately 58.72% of instances in the dataset.
+
+2.Stochastic Gradient Descent
+
+
+from sklearn.linear_model import SGDClassifier
+#creating model instance
+model2 = SGDClassifier()
+
+#Hyperparameter tuning
+
+#Define hyperparameter grid to search through
+param_grid2 = {'alpha':[0.0001,0.001,0.01,0.1],
+               'learning_rate':['constant','optimal','invscaling','adaptive'],
+               'max_iter':[100,200,500,1000]}
+
+#Grid search with 5-fold cross validation
+grid2 = GridSearchCV(model2,param_grid=param_grid2,cv=5,scoring='accuracy',n_jobs=-1)
+grid2.fit(X_train_scaled,y_train)
+
+#Best parameters
+print('Best Parameters:',grid2.best_params_)
+
+#get the best model
+best_sgd_model = grid2.best_estimator_
+
+#Prediction
+sgd_pred = best_sgd_model.predict(X_test_scaled)
+sgd_pred
+     
+Best Parameters: {'alpha': 0.0001, 'learning_rate': 'optimal', 'max_iter': 200}
+array([5, 6, 5, 5, 6, 6, 5, 5, 5, 6, 5, 5, 6, 6, 6, 7, 5, 5, 5, 5, 4, 6,
+       5, 5, 4, 5, 5, 6, 5, 6, 6, 6, 7, 5, 6, 5, 7, 7, 5, 6, 5, 5, 5, 5,
+       6, 6, 5, 6, 6, 5, 5, 4, 7, 5, 5, 5, 6, 3, 6, 5, 5, 5, 6, 5, 6, 5,
+       5, 5, 5, 5, 5, 5, 6, 4, 5, 5, 5, 6, 5, 6, 6, 6, 6, 6, 5, 6, 4, 5,
+       6, 5, 5, 6, 5, 6, 6, 5, 6, 5, 6, 5, 6, 6, 5, 6, 5, 6, 5, 5, 5, 6,
+       5, 5, 5, 6, 6, 5, 5, 6, 5, 5, 5, 5, 6, 5, 5, 6, 7, 7, 5, 6, 5, 5,
+       6, 6, 5, 5, 7, 6, 7, 6, 5, 5, 5, 6, 5, 5, 5, 4, 5, 4, 5, 5, 7, 6,
+       5, 6, 6, 7, 5, 6, 5, 6, 5, 4, 6, 6, 5, 5, 5, 5, 6, 5, 6, 5, 7, 6,
+       7, 5, 5, 5, 5, 7, 5, 5, 5, 5, 5, 5, 5, 5, 5, 5, 5, 5, 6, 5, 5, 5,
+       6, 5, 4, 5, 5, 6, 6, 6, 7, 5, 5, 5, 7, 5, 6, 5, 6, 6, 6, 5, 5, 5,
+       5, 5, 5, 5, 5, 6, 6, 6, 5, 5, 5, 5, 6, 6, 6])
+Model Evaluation
+
+
+sgd_score = accuracy_score(y_test,sgd_pred)
+sgd_matrix = confusion_matrix(y_test,sgd_pred)
+
+print('Stochastic Gradient Descent Accuracy: ',sgd_score)
+
+disp2 = ConfusionMatrixDisplay(confusion_matrix=sgd_matrix,display_labels=class_labels)
+disp2.plot(cmap='Blues',values_format='d')
+plt.title('Confusion Matrix')
+plt.show()
+
+     
+Stochastic Gradient Descent Accuracy:  0.502127659574468
+
+An accuracy of 0.5021(50.21%) for a Stochastic Gradient Descent Classifier implies that the model correctly predicted the target variable(wine quality) for approximately 50.21% of instances in the dataset.
+
+3.Support Vector Machine
+
+
+from sklearn.svm import SVC
+
+#creating model instance
+model3 = SVC()
+
+#fitting the model
+svc_model = model3.fit(X_train_scaled,y_train)
+
+#prediction
+
+svc_pred = model3.predict(X_test_scaled)
+svc_pred
+
+     
+array([6, 5, 5, 5, 7, 6, 6, 6, 5, 6, 6, 5, 7, 6, 6, 6, 5, 5, 5, 5, 7, 6,
+       5, 5, 6, 5, 5, 6, 5, 6, 6, 6, 6, 5, 6, 5, 6, 6, 5, 6, 5, 6, 5, 6,
+       6, 5, 5, 6, 6, 5, 5, 7, 6, 5, 5, 6, 6, 5, 5, 5, 5, 6, 7, 5, 6, 5,
+       5, 5, 5, 5, 5, 5, 6, 6, 6, 6, 5, 6, 6, 6, 6, 6, 6, 5, 5, 7, 5, 5,
+       6, 6, 5, 6, 5, 7, 6, 5, 6, 5, 6, 5, 6, 6, 5, 6, 5, 6, 6, 5, 5, 6,
+       5, 6, 5, 6, 6, 5, 5, 6, 5, 6, 5, 6, 6, 5, 5, 6, 6, 7, 5, 6, 6, 5,
+       6, 6, 5, 5, 6, 6, 6, 6, 5, 5, 6, 6, 5, 5, 6, 7, 5, 5, 5, 5, 6, 6,
+       5, 6, 6, 6, 5, 6, 5, 5, 5, 7, 6, 6, 5, 6, 6, 6, 7, 5, 7, 5, 6, 6,
+       5, 5, 6, 5, 5, 7, 5, 5, 5, 6, 5, 5, 5, 5, 5, 5, 5, 5, 6, 5, 5, 5,
+       6, 5, 6, 5, 5, 5, 7, 7, 6, 6, 5, 5, 5, 5, 6, 5, 7, 6, 6, 5, 5, 5,
+       6, 5, 5, 5, 5, 7, 7, 6, 5, 5, 5, 5, 6, 6, 6])
+Model Evaluation
+
+
+svc_score = accuracy_score(y_test,svc_pred)
+svc_matrix = confusion_matrix(y_test,svc_pred)
+
+print('Support Vector Machine Accuracy: ',svc_score)
+
+disp3 = ConfusionMatrixDisplay(confusion_matrix=svc_matrix,display_labels=class_labels)
+disp3.plot(cmap='Blues',values_format='d')
+plt.title('Confusion Matrix')
+plt.show()
+
+     
+Support Vector Machine Accuracy:  0.6212765957446809
+
+An accuracy of 0.6212(62.12%) for a Support Vector Machine implies that the model correctly predicted the target variable(wine quality) for approximately 62.12% of instances in the dataset.
+
+Summary
+Among the three models, Support Vector Machine has better performance with an accuracy of 0.6212.
